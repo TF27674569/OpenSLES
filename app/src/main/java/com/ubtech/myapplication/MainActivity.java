@@ -1,57 +1,37 @@
 package com.ubtech.myapplication;
 
-import android.content.Context;
-import android.media.AudioManager;
-import android.os.Build;
-import android.os.Environment;
+import android.opengl.GLSurfaceView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/南方姑娘[1].mp3";
-
-    boolean isPlaying = false;
+    private GLSurfaceView glSurfaceView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ESAudio.createEngine();
-        int sampleRate = 0;
-        int bufSize = 0;
+        glSurfaceView = findViewById(R.id.glSurfaceView);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            AudioManager myAudioMgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            String nativeParam = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-            sampleRate = Integer.parseInt(nativeParam);
-            nativeParam = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-            bufSize = Integer.parseInt(nativeParam);
-        }
+        glSurfaceView.setEGLContextClientVersion(2);
+        glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        glSurfaceView.setRenderer(new AirHockeyRenderer(this));
+        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        // RENDERMODE_WHEN_DIRTY 和 RENDERMODE_CONTINUOUSLY，前者是懒惰渲染，需要手动调用 glSurfaceView.requestRender() 才会进行更新，而后者则是不停渲染。
+    }
 
-        Log.e("TAG", "sampleRate: "+sampleRate+"    bufSize:"+bufSize );
-        ESAudio.createBufferQueueAudioPlayer(sampleRate, bufSize);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        glSurfaceView.onPause();
+    }
 
-
-        findViewById(R.id.sample_text)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ESAudio.createUriAudioPlayer(path);
-                    }
-                });
-
-        findViewById(R.id.play)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        isPlaying = !isPlaying;
-                        ESAudio.setPlayingUriAudioPlayer(isPlaying);
-                    }
-                });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        glSurfaceView.onResume();
     }
 
 }
